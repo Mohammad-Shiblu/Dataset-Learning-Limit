@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.data_generator import generate_synthetic_dataset
 from src.visualization import data_visualization
 from src.model import select_model
+from src.probability import calculate_theorotical_error, calculate_maximum_coverage
 
 def main():
     df = generate_synthetic_dataset(1000)
@@ -33,6 +34,16 @@ def main():
         print(f"Model name: {model_name}, global_accuracy: {global_accuracy}, Scores for each fold: {scores}, Average_score: {np.mean(scores):.4f}")
         with open(output_file, 'a') as f:
             f.write(f"Model name: {model_name}, global_accuracy: {global_accuracy}, Scores for each fold: {scores}, Average_score: {np.mean(scores):.4f}\n")
+
+    # calculate the theretical error (crossover region between two pdf)
+    intersection_point, theretical_error = calculate_theorotical_error(df)
+    maximum_coverage = calculate_maximum_coverage(df)
+    print(f"Intersection point between the two pdf is: {intersection_point}")
+    print(f"The theretical error (the cross over region): {theretical_error: .4f}")
+    print(f"The maximum coverage error: {maximum_coverage: .4f}")
+    with open(output_file, 'a') as f:
+        f.write(f"The theretical error (the cross over region): {theretical_error: .4f}\nThe maximum coverage error: {maximum_coverage: .4f}\n")
+
 
 if __name__ == "__main__":
     main()
