@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from itertools import combinations
 from sklearn.tree import DecisionTreeClassifier, export_text, _tree
 from scipy import stats
 
@@ -21,58 +22,65 @@ def calculate_continuous_ambiguity(df, class_column):
     max_values = grouped.max()
     hypercubes = {cls: (min_values.loc[cls].values, max_values.loc[cls].values) for cls in classes}
 
-    # Calculate Overlap Regions
+    # Calculate Overlap Regions for all combinations of classes
     overlap_regions = []
     class_list = list(hypercubes.keys())
     num_classes = len(class_list)
     
-    for i in range(num_classes):
-        for j in range(i + 1, num_classes):
-            min_overlap = np.maximum(hypercubes[class_list[i]][0], hypercubes[class_list[j]][0])
-            max_overlap = np.minimum(hypercubes[class_list[i]][1], hypercubes[class_list[j]][1])
+    # Find all possible combinations of overlapping classes
+    for r in range(2, num_classes + 1):
+        for class_comb in combinations(class_list, r):
+            min_overlap = np.maximum.reduce([hypercubes[cls][0] for cls in class_comb])
+            max_overlap = np.minimum.reduce([hypercubes[cls][1] for cls in class_comb])
             if np.all(min_overlap <= max_overlap):
-                overlap_regions.append((class_list[i], class_list[j], min_overlap, max_overlap))
+                overlap_regions.append((class_comb, min_overlap, max_overlap))
 
     # Count Samples in Overlap Regions
     samples = df[features].values
     class_labels = df[class_column].values
 
     samples_in_overlap = {}
+    counted_samples = np.zeros(samples.shape[0], dtype=bool)  # To keep track of counted samples
 
-    for cls1, cls2, min_overlap, max_overlap in overlap_regions:
-        in_overlap_cls1 = np.all((samples >= min_overlap) & (samples <= max_overlap), axis=1) & (class_labels == cls1)
-        in_overlap_cls2 = np.all((samples >= min_overlap) & (samples <= max_overlap), axis=1) & (class_labels == cls2)
+    # Initialize overlap count for each class
+    overlap_count = {cls: 0 for cls in classes}
 
-        count_cls1 = np.sum(in_overlap_cls1)
-        count_cls2 = np.sum(in_overlap_cls2)
+    # Start counting samples from the most specific overlap region (highest number of classes)
+    for class_comb, min_overlap, max_overlap in sorted(overlap_regions, key=lambda x: -len(x[0])):
+        in_overlap = np.all((samples >= min_overlap) & (samples <= max_overlap), axis=1) & ~counted_samples
 
-        region_key = f'{cls1}-{cls2}'
-        samples_in_overlap[region_key] = {cls1: count_cls1, cls2: count_cls2} # samples in the overlap region
+        # Mark these samples as counted
+        counted_samples[in_overlap] = True
+
+        # Count samples for each class in this overlapping region
+        for cls in class_comb:
+            count_cls = np.sum(in_overlap & (class_labels == cls))
+            overlap_count[cls] += count_cls
+
+            # Record counts for each overlap region for debugging
+            region_key = '-'.join(map(str, class_comb))
+            if region_key not in samples_in_overlap:
+                samples_in_overlap[region_key] = {}
+            samples_in_overlap[region_key][cls] = count_cls
 
     # Calculate Ambiguity
     total_samples_per_class = df[class_column].value_counts().to_dict()
-    # print("total samples per class:")
-    # print(total_samples_per_class)
+
     ambiguity_values = {cls: 0 for cls in classes}
 
-    for region, counts in samples_in_overlap.items():
-        cls1, cls2 = region.split('-')
-        cls1 = float(cls1)  # Ensure class labels are correctly interpreted
-        cls2 = float(cls2)
-        if cls1 in total_samples_per_class and cls2 in total_samples_per_class:
-            if total_samples_per_class[cls1] > 0:
-                ambiguity_values[cls1] += counts[cls1] / total_samples_per_class[cls1]
-            if total_samples_per_class[cls2] > 0:
-                ambiguity_values[cls2] += counts[cls2] / total_samples_per_class[cls2]
+    # Calculate ambiguity values
+    for cls in classes:
+        if total_samples_per_class[cls] > 0:
+            ambiguity_values[cls] = overlap_count[cls] / total_samples_per_class[cls]
 
     mean_ambiguity = np.mean(list(ambiguity_values.values())) if ambiguity_values else 0.0
-    
-    # overlap_regions, samples_in_overlap can be used to check the overlalped regions and the samples number in the overlapped regions.
+
+    # overlap_regions, samples_in_overlap can be used for debugging
 
     return mean_ambiguity
 
 
-def calculate_continuous_error(df, label_column):
+def calculate_continuous_error(df, label_column, random_state= 42):
     """
     Calculate error for continuous featured datasets using Recatangular segmentation and calculating the probability of that segment belong to the other class.
     Args:
@@ -86,7 +94,7 @@ def calculate_continuous_error(df, label_column):
     X = df[feature_columns]
     y = df[label_column]
 
-    clf = DecisionTreeClassifier(max_depth=None)
+    clf = DecisionTreeClassifier(max_depth=None, random_state=random_state)
     clf.fit(X, y)
 
     training_accuracy = clf.score(X, y)
@@ -127,9 +135,11 @@ def calculate_continuous_error(df, label_column):
 
     # Extract rectangles and labels from the decision tree
     rectangles = get_rectangles_from_tree(clf.tree_)
-    # print(rectangles)
+    
     # Calculate KDE for each class complement
+    # print(rectangles)
     classes = np.unique(df[label_column])
+    # print(classes)
     kde_by_class = {}
 
     for cls in classes:
@@ -143,6 +153,11 @@ def calculate_continuous_error(df, label_column):
         bounds_max = [b[1] for b in rect]
         segment = df[np.all((df[feature_columns] >= bounds_min) & (df[feature_columns] < bounds_max), axis=1)]
 
+        # print(f"Predicted label: {predicted_label}")
+        # print(f"Available KDE class labels: {list(kde_by_class.keys())}")
+        if predicted_label not in kde_by_class: # when there is not any sample in the segmented ragion decision tree assign a random label
+            print(f"Warning: Predicted label '{predicted_label}' is not a valid class.")
+            continue
         if not segment.empty:
             # Calculate the probability of misclassification for this segment
             kde = kde_by_class[predicted_label]
