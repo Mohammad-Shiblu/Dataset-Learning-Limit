@@ -33,6 +33,20 @@ $P(R_k\notin k)$  indicates the probability that the samples within this segment
 </div>
 The figure above shows the segmentation process achieve on syntehtic datasets using decision tree classifier.
 
+<br>
+For discrete or categorical-featured datasets, ambiguity arises when the same feature combination is assigned different labels. To compute this ambiguity, we first calculate the probability of each feature combination belonging to a certain class. Based on these probability values, the true label can be assigned by majority voting or by selecting the class with the highest probability. The probability of a feature combination belonging to any other class is then considered as ambiguity. By normalizing this value according to the number of classes and taking the mean across all feature combinations, we obtain the ambiguity value for the entire dataset. This concept can be formulated as follows:
+
+$$ A_d =  \frac{1}{N}\left(\frac{K}{K-1} \sum_{i}^{N} 1- max\left(\frac{|i_k|}{|i|}\right)\right) $$
+
+Here, ${k}$ is the number of classes, ${N}$ is the number of permutations of feature combinations in the dataset $D$, ${|i_k|}$  is the number of instances where the ${i}$-th feature combination belongs to class k, and ${|i|}$ is is the total number of times the $i$-th feature combination appears in the dataset.
+
+Now the error arises from this ambiguity can be calculated using the following approach. For every feature combination first count the total number of instances of that feature combination in the entire dataset ${D}$. And then using majority voting find the most probable class for that feature combination. subtracting this number of instances for the most probable class from total instance count of that particular feature combination will give us the error count for that feature combination. and then by normalizing it for all feature combination we can get the error for categorical cases. this concept can be expressed by following equation:
+
+$$ E_d = \frac{1}{N} \sum_{i\in N } \frac{|i| -max(i_k)}{|i|} $$
+
+Here, ${E_d}$ represents the error for the discrete dataset, ${N}$ is the total number of feature combinations, ${|i|}$ denotes the total number of occurrences of a feature combination ${i}$, and ${i_k}$ is the number of occurrences of feature combination ${i}$ for class ${k}$. 
+
+
 ## Installation
 Step 1:  To run this project, you need to have Python installed along with the necessary dependencies. You can install the required packages using `pip`:
 
