@@ -57,7 +57,7 @@ class DatasetApp:
         self.dataset_type_menu.grid(row=0, column=1, padx=20, pady=20, sticky="ew")
 
         ctk.CTkLabel(self.main_frame, text="Select Dataset:", font=("Arial", 15)).grid(row=1, column=0, padx=20, pady=20, sticky="w")
-        self.dataset_var = ctk.StringVar(value="Lens")
+        self.dataset_var = ctk.StringVar(value="Iris")
         self.datasets = {
             'Discrete': ['Lens', 'Car', 'Zoo', 'Tictac', 'Balance'],
             'Continuous': ['Iris', 'Kidney_stone', 'Wine'],
