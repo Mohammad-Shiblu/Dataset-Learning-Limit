@@ -60,4 +60,4 @@ def calculate_discrete_error(data, class_column):
 
     mean_error = pivot_table['error'].mean()
     # pivot_table can be used fpr debugging the code
-    return mean_error
+    return mean_error, pivot_table
