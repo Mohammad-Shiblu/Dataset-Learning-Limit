@@ -48,15 +48,14 @@ Here, ${E_d}$ represents the error for the discrete dataset, ${N}$ is the total 
 
 
 ## Installation
-Step 1:  To run this project, you need to have Python installed along with the necessary dependencies. You can install the required packages using `pip`:
+Step 1: clone the repository.
+```bash
+git clone https://gitlab.cs.fau.de/cdh-seminars/dataset-learning-limit/dll_seminar_ss_2024.git
+```
+Step 2:  To run this project, you need to have Python installed along with the necessary dependencies. You can install the required packages using `pip`:
 
 ```bash
 pip install -r requirements.txt
-```
-
-Step 2: clone the repository.
-```bash
-git https://gitlab.cs.fau.de/cdh-seminars/dataset-learning-limit/dll_seminar_ss_2024.git
 ```
 step 3: Execute the main Python script in script to start the application:
 ```bash
