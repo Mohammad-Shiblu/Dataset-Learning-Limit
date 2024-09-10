@@ -105,6 +105,7 @@ step 4: Interact with the GUI:
 <br>
 Brief Process to add new datasets: 
 <br>
+Most of the datasets were collected from UCI machine learning reporsitory. 
 New datasets can be added using the dataloader.py file in the src package. The process is explained briefly below:
 
 * Determine Dataset Type: Identify if the dataset is continuous, discrete, or mixed.
