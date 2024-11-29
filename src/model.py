@@ -1,10 +1,11 @@
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, cross_validate, KFold
+from src.continuous import calc_ambiguity_np
 
 class Model:
     def __init__(self, model_type = 'rf', **kwargs):
@@ -14,6 +15,8 @@ class Model:
         self.y_train = None
         self.X_test = None
         self.y_test = None
+        self.X = None
+        self.y = None
 
     def initialize_model(self, model_type, **kwargs):
         models = {
@@ -30,9 +33,9 @@ class Model:
     def data_split(self, df, test_size = .2, random_state = 42):
         feature_col = df.columns[:-1]
         class_col = df.columns[-1]
-        X= df[feature_col]
-        y = df[class_col]
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        self.X= df[feature_col].values
+        self.y = df[class_col].values
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
 
     def train(self, df=None, X_train=None, y_train=None, test_size=0.2, random_state=42):
         if df is not None:
@@ -57,6 +60,42 @@ class Model:
         accuracy = accuracy_score(y_test, predictions)
         return accuracy
     
-    def cross_validate(self, cv =5):
-        scores = cross_val_score(self.model, self.X_train, self.y_train, cv=cv) 
-        return scores.mean(), scores
+    def cross_validate_with_metrics(self, cv=5):
+        kf = KFold(n_splits=cv, shuffle=True, random_state=42)
+        results = []
+
+        for fold, (train_index, test_index) in enumerate(kf.split(self.X)):
+            # Use .iloc if self.X and self.y are pandas DataFrames
+            X_train, X_test = self.X[train_index], self.X[test_index]
+            y_train, y_test = self.y[train_index], self.y[test_index]
+
+            # Train model
+            self.model.fit(X_train, y_train)
+
+            # Calculate Train Ambiguity and Error
+            train_ambiguity = calc_ambiguity_np(X_train, y_train)  # Pass both X and y
+            train_predictions = self.model.predict(X_train)
+            train_error = sum(train_predictions != y_train) / len(y_train)
+
+            # Calculate Test Ambiguity and Error
+            test_ambiguity = calc_ambiguity_np(X_test, y_test)  # Pass both X and y
+            test_predictions = self.model.predict(X_test)
+            test_error = sum(test_predictions != y_test) / len(y_test)
+
+            # Evaluate accuracy
+            train_accuracy = self.model.score(X_train, y_train)
+            test_accuracy = self.model.score(X_test, y_test)
+
+            # Store results
+            results.append({
+                'fold': fold + 1,
+                'train_ambiguity': train_ambiguity,
+                'train_error': train_error,
+                'train_accuracy': train_accuracy,
+                'test_ambiguity': test_ambiguity,
+                'test_error': test_error,
+                'test_accuracy': test_accuracy
+            })
+
+        return results
+    
