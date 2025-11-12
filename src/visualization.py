@@ -20,11 +20,12 @@ def data_visualization(df):
     plt.ylabel('Density')
     plt.legend()
     plt.grid(True)
+    plt.show()
     
-    file_name = "kde_plot.png"
-    output_dir = "output"
-    output_path = os.path.join(output_dir, file_name)
-    plt.savefig(output_path)
-    plt.close()
+    # file_name = "kde_plot.png"
+    # output_dir = "output"
+    # output_path = os.path.join(output_dir, file_name)
+    # plt.savefig(output_path)
+    # plt.close()
 
-    print(f"Plot saved to {output_path}")
+    # print(f"Plot saved to {output_path}")

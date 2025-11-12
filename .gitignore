@@ -15,8 +15,7 @@ node_modules/
 __pycache__/
 
 # Ignore virtual environment directories
-venv/
-.env/
+.venv_project/
 
 # Ignore compiled Java files
 *.class
@@ -30,5 +29,4 @@ dist/
 .idea/
 *.swp
 
-# Ignore text files
-*.txt
+
