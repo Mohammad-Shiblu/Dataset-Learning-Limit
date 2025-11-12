@@ -101,6 +101,10 @@ $$\eta_{sam} = \frac{\text{Number of correctly classified samples in unseen segm
 ### Streamlit Application
 The project includes an interactive web application built with Streamlit that provides:
 
+<div style="text-align: center;">
+  <img src="output/window.png" alt="Streamlit Application Interface" width="600" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
+</div>
+
 - **Dataset Selection**: Choose from 10+ pre-loaded UCI datasets or upload custom CSV/Excel files
 - **Classifier Options**: Gaussian Naive Bayes, Logistic Regression, SVM, Random Forest
 - **Configurable Parameters**: Test split size, number of analysis runs
@@ -159,3 +163,15 @@ The tool includes 10 pre-loaded datasets from the UCI ML repository:
 - Dry Bean, Blood Transfusion
 
 Custom datasets can be uploaded via the web interface (CSV/Excel format with 'class' column required).
+
+## Application Demo
+
+Below are screenshots of the overfitting analyzer application interface:
+
+<div style="text-align: center;">
+  <img src="output/app_ui_1.png" alt="Application Interface 1" width="600" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
+</div>
+
+<div style="text-align: center;">
+  <img src="output/app_ui_2.png" alt="Application Interface 2" width="600" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
+</div>
