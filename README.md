@@ -82,39 +82,80 @@ The table below presents the formulas for calculating ambiguity and error for th
   <img src="output/equation.png" alt="Sample Figure" width="500" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
 </div>
 
+## Project: Overfitting Detection using Mini-Cluster Analysis
 
-## Installation
-Step 1: clone the repository.
+### Overview
+This project implements a method to detect overfitting by evaluating a model's ability to generalize to unseen, label-homogeneous mini-clusters in the feature space. Instead of relying solely on global accuracy, the dataset is partitioned into small, class-pure segments and the model is tested on segments excluded from training to reveal localized generalization failures.
+
+### Key Metrics
+Two complementary metrics are computed on unseen segments:
+
+$$\eta_{seg} = \frac{\text{Number of correctly classified unseen segments}}{\text{Number of incorrectly classified unseen segments}}$$
+
+$$\eta_{sam} = \frac{\text{Number of correctly classified samples in unseen segments}}{\text{Number of incorrectly classified samples in unseen segments}}$$
+
+### Interpretation
+- If η < 1, the model is considered to exhibit **overfitting** (poor local generalization)
+- If η > 1, the model generalizes well to unseen local regions
+
+### Streamlit Application
+The project includes an interactive web application built with Streamlit that provides:
+
+- **Dataset Selection**: Choose from 10+ pre-loaded UCI datasets or upload custom CSV/Excel files
+- **Classifier Options**: Gaussian Naive Bayes, Logistic Regression, SVM, Random Forest
+- **Configurable Parameters**: Test split size, number of analysis runs
+- **Real-time Analysis**: Live computation of overfitting metrics
+- **Visualization**: Density plots of segment and sample ratios
+- **Export Functionality**: Download results as CSV for further analysis
+
+### Usage
+1. Train a decision tree to full purity on the dataset to generate label-homogeneous segments
+2. Create train/test splits and identify segments containing only test samples (unseen segments)
+3. Evaluate model predictions on samples in unseen segments and compute η_seg and η_sam
+
+### Notes
+This method is complementary to standard evaluation metrics (accuracy, cross-validation) and is particularly useful for diagnosing localized memorization versus genuine pattern learning.
+
+## Installation and Usage
+
+1. Clone the repository:
 ```bash
 git clone https://gitlab.cs.fau.de/cdh-seminars/dataset-learning-limit/dll_seminar_ss_2024.git
+cd dll_seminar_ss_2024
 ```
-Step 2:  To run this project, you need to have Python installed along with the necessary dependencies. You can install the required packages using `pip`:
 
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-step 3: Execute the main Python script in script to start the application:
+
+3. Run the overfitting analyzer:
 ```bash
-python main.py
+streamlit run overfitting_analyser.py
 ```
-step 4: Interact with the GUI:
-* Choose a dataset type from the dropdown menu.
-* Select a dataset for analysis 
-* View the results directly in the app ny pressing the Load Dataset button.
 
-<br>
-Brief Process to add new datasets: 
-<br>
-Most of the datasets were collected from UCI machine learning reporsitory. 
-New datasets can be added using the dataloader.py file in the src package. The process is explained briefly below:
+4. Access the web interface at `http://localhost:8501`
 
-* Determine Dataset Type: Identify if the dataset is continuous, discrete, or mixed.
-* Create a Loader Function: Add a new function in dataloader.py that loads and preprocesses the dataset. Use LabelEncoder for categorical data if needed.
-* Update dataset_loaders Dictionary: In the __init__ method of DataLoader, add the new loader function to the relevant dictionary (continuous, discrete, or mixed).
+## Project Structure
 
+```
+├── src/
+│   ├── continuous.py      # Continuous dataset analysis
+│   ├── discrete.py        # Discrete dataset analysis
+│   ├── data_loader.py     # Dataset loading utilities
+│   ├── model.py          # Machine learning models
+│   └── visualization.py   # Plotting functions
+├── notebooks/            # Jupyter notebooks for analysis
+├── data/                # Dataset files
+├── output/              # Generated plots and results
+└── overfitting_analyser.py  # Main Streamlit application
+```
 
-## App visual
-Below is the screenshot of the application interface:
-<div style="text-align: center;">
-  <img src="output/window.png" alt="Sample Figure" width="500" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
-</div>
+## Available Datasets
+
+The tool includes 10 pre-loaded datasets from the UCI ML repository:
+- Iris, Wine, Heart Attack, Kidney Stone
+- Anaemia, Breast Cancer, Rice, Gender Classification
+- Dry Bean, Blood Transfusion
+
+Custom datasets can be uploaded via the web interface (CSV/Excel format with 'class' column required).
