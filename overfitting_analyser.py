@@ -331,8 +331,8 @@ if 'df' in st.session_state:
                 std_test_acc = np.std(test_accuracies)
                 
                 
-                overfitting_segment = "Not Overfitting" if avg_segment_ratio > 0.5 else "Overfitting"
-                overfitting_sample = "Not Overfitting" if avg_sample_ratio > 0.5 else "Overfitting"
+                overfitting_segment = "Not Overfitting" if avg_segment_ratio > 1 else "Overfitting"
+                overfitting_sample = "Not Overfitting" if avg_sample_ratio > 1 else "Overfitting"
                 
                 # Display results
                 st.markdown("---")
